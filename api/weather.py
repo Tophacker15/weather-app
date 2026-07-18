@@ -1,6 +1,7 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import requests
+import concurrent.futures
 
 GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search"
 REVERSE_URL = "https://api.bigdatacloud.net/data/reverse-geocode-client"
@@ -50,7 +51,7 @@ def geocode_by_name(city):
     res = requests.get(
         GEOCODE_URL,
         params={"name": city, "count": 1, "language": "en", "format": "json"},
-        timeout=8,
+        timeout=6,
     )
     data = res.json()
     results = data.get("results")
@@ -71,7 +72,7 @@ def reverse_geocode(lat, lon):
         res = requests.get(
             REVERSE_URL,
             params={"latitude": lat, "longitude": lon, "localityLanguage": "en"},
-            timeout=8,
+            timeout=6,
         )
         data = res.json()
         name = data.get("city") or data.get("locality") or "Current Location"
@@ -98,7 +99,7 @@ def fetch_forecast(lat, lon):
             "timezone": "auto",
             "forecast_days": 8,
         },
-        timeout=8,
+        timeout=6,
     )
     return res.json()
 
@@ -115,17 +116,20 @@ class handler(BaseHTTPRequestHandler):
             lon = body.get("lon")
 
             if lat is not None and lon is not None:
-                place = reverse_geocode(lat, lon)
+                with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+                    place_future = pool.submit(reverse_geocode, lat, lon)
+                    forecast_future = pool.submit(fetch_forecast, lat, lon)
+                    place = place_future.result()
+                    forecast = forecast_future.result()
             elif city:
                 place = geocode_by_name(city)
                 if not place:
                     self._send(404, {"error": f'No location found for "{city}"'})
                     return
+                forecast = fetch_forecast(place["lat"], place["lon"])
             else:
                 self._send(400, {"error": "Provide a city name or coordinates"})
                 return
-
-            forecast = fetch_forecast(place["lat"], place["lon"])
             current = forecast.get("current")
             hourly = forecast.get("hourly")
             daily = forecast.get("daily")
