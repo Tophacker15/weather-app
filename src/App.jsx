@@ -16,6 +16,12 @@ html,body{background:#252F5C;font-family:'Kanit',sans-serif;color:#fff;min-heigh
 .search-panel input{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:.65rem .8rem;color:#fff;font-family:inherit;font-size:.9rem;outline:none;margin-bottom:.6rem}
 .search-panel input::placeholder{color:rgba(255,255,255,.35)}
 .search-panel button.go{width:100%;background:#3B82F6;border:none;border-radius:10px;color:#fff;font-family:inherit;font-weight:600;font-size:.85rem;padding:.6rem;cursor:pointer;margin-bottom:.6rem}
+.suggest-list{max-height:220px;overflow-y:auto;margin-bottom:.4rem}
+.suggest-item{display:flex;flex-direction:column;padding:.55rem .5rem;border-radius:8px;cursor:pointer}
+.suggest-item:hover{background:rgba(255,255,255,.08)}
+.suggest-name{font-size:.86rem;font-weight:600}
+.suggest-sub{font-size:.7rem;opacity:.5}
+.suggest-empty{font-size:.78rem;opacity:.4;padding:.5rem .3rem}
 .dropdown-item{display:flex;align-items:center;gap:.5rem;padding:.55rem .3rem;font-size:.85rem;color:#fff;opacity:.85;cursor:pointer;border-radius:8px}
 .dropdown-item:hover{background:rgba(255,255,255,.08);opacity:1}
 .dropdown-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;opacity:.4;padding:.4rem .3rem .1rem}
@@ -56,6 +62,17 @@ html,body{background:#252F5C;font-family:'Kanit',sans-serif;color:#fff;min-heigh
 .sunrow{margin:0 1.2rem;display:flex;justify-content:space-around;background:rgba(255,255,255,.06);border-radius:20px;padding:1.1rem;text-align:center}
 .sun-label{font-size:.7rem;opacity:.55;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem}
 .sun-val{font-weight:700;font-size:1.05rem}
+.credit{text-align:center;font-size:.7rem;opacity:.3;letter-spacing:.1em;margin-top:1.6rem}
+
+.splash{position:fixed;inset:0;z-index:999;background:linear-gradient(160deg,#2C3A6B 0%,#3A4A85 45%,#2A3563 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;transition:opacity .5s ease}
+.splash.hiding{opacity:0;pointer-events:none}
+.splash-mark{width:38px;height:38px;border:3px solid;border-image:linear-gradient(95deg,#3B82F6,#F59E0B) 1;border-radius:9px;transform:rotate(45deg);animation:splashPulse 1.3s ease-in-out infinite}
+.splash-name{font-weight:800;font-size:1.5rem;letter-spacing:.1em;text-transform:uppercase;opacity:0;animation:splashFadeIn .6s ease forwards .15s}
+.splash-sub{font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;opacity:0;color:#93C5FD;animation:splashFadeIn .6s ease forwards .35s}
+@keyframes splashPulse{0%,100%{transform:rotate(45deg) scale(1)}50%{transform:rotate(45deg) scale(1.15)}}
+@keyframes splashFadeIn{to{opacity:.85}}
+@media(prefers-reduced-motion:reduce){.splash-mark{animation:none}.splash-name,.splash-sub{animation:none;opacity:.85}}
 `;
 
 const WIND_DIRS = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
@@ -79,10 +96,53 @@ function formatClock(iso) {
 }
 
 export default function App() {
+  const [splashVisible, setSplashVisible] = useState(true);
+  const [splashHiding, setSplashHiding] = useState(false);
+
+  useEffect(() => {
+    const hideTimer = setTimeout(() => setSplashHiding(true), 1300);
+    const removeTimer = setTimeout(() => setSplashVisible(false), 1800);
+    return () => {
+      clearTimeout(hideTimer);
+      clearTimeout(removeTimer);
+    };
+  }, []);
+
   const [data, setData] = useState(null);
   const [status, setStatus] = useState("locating");
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const debounceRef = useRef(null);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (query.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/weather?q=${encodeURIComponent(query.trim())}`);
+        const json = await res.json();
+        setSuggestions(res.ok ? json.results || [] : []);
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 350);
+    return () => clearTimeout(debounceRef.current);
+  }, [query]);
+
+  function pickSuggestion(place) {
+    loadWeather({ lat: place.lat, lon: place.lon });
+    setShowSearch(false);
+    setQuery("");
+    setSuggestions([]);
+  }
   const [showSearch, setShowSearch] = useState(false);
   const [recents, setRecents] = useState([]);
   const searchRef = useRef(null);
@@ -186,6 +246,14 @@ export default function App() {
   return (
     <>
       <style>{STYLES}</style>
+
+      {splashVisible && (
+        <div className={`splash ${splashHiding ? "hiding" : ""}`}>
+          <div className="splash-mark"></div>
+          <div className="splash-name">Topboy</div>
+          <div className="splash-sub">Innovation</div>
+        </div>
+      )}
       <div className="app">
         <div className="topbar">
           <div className="loc">
@@ -202,16 +270,34 @@ export default function App() {
                   <input autoFocus type="text" placeholder="Search city..." value={query} onChange={(e) => setQuery(e.target.value)} />
                   <button type="submit" className="go">Search</button>
                 </form>
-                <div className="dropdown-item" onClick={useCurrentLocation}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><circle cx="12" cy="12" r="8" /><line x1="12" y1="2" x2="12" y2="4" /><line x1="12" y1="20" x2="12" y2="22" /><line x1="2" y1="12" x2="4" y2="12" /><line x1="20" y1="12" x2="22" y2="12" /></svg>
-                  Use current location
-                </div>
-                {recents.length > 0 && (
-                  <>
-                    <div className="dropdown-label">Recent</div>
-                    {recents.map((r) => (
-                      <div className="dropdown-item" key={r.name} onClick={() => pickRecent(r)}>{r.name}</div>
+
+                {query.trim().length >= 2 ? (
+                  <div className="suggest-list">
+                    {searching && <div className="suggest-empty">Searching...</div>}
+                    {!searching && suggestions.length === 0 && (
+                      <div className="suggest-empty">No matches yet — keep typing or hit Search.</div>
+                    )}
+                    {!searching && suggestions.map((s, i) => (
+                      <div className="suggest-item" key={`${s.name}-${i}`} onClick={() => pickSuggestion(s)}>
+                        <span className="suggest-name">{s.name}</span>
+                        <span className="suggest-sub">{[s.admin1, s.country].filter(Boolean).join(", ")}</span>
+                      </div>
                     ))}
+                  </div>
+                ) : (
+                  <>
+                    <div className="dropdown-item" onClick={useCurrentLocation}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><circle cx="12" cy="12" r="8" /><line x1="12" y1="2" x2="12" y2="4" /><line x1="12" y1="20" x2="12" y2="22" /><line x1="2" y1="12" x2="4" y2="12" /><line x1="20" y1="12" x2="22" y2="12" /></svg>
+                      Use current location
+                    </div>
+                    {recents.length > 0 && (
+                      <>
+                        <div className="dropdown-label">Recent</div>
+                        {recents.map((r) => (
+                          <div className="dropdown-item" key={r.name} onClick={() => pickRecent(r)}>{r.name}</div>
+                        ))}
+                      </>
+                    )}
                   </>
                 )}
               </div>
@@ -308,6 +394,8 @@ export default function App() {
                 <div className="sun-val">{formatClock(data.sunset)}</div>
               </div>
             </div>
+
+            <div className="credit">by TOPBOY</div>
           </>
         )}
       </div>
