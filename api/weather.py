@@ -1,4 +1,5 @@
 from http.server import BaseHTTPRequestHandler
+from urllib.parse import urlparse, parse_qs
 import json
 import requests
 import concurrent.futures
@@ -105,6 +106,42 @@ def fetch_forecast(lat, lon):
 
 
 class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        try:
+            query = parse_qs(urlparse(self.path).query)
+            q = (query.get("q", [""])[0]).strip()
+
+            if len(q) < 2:
+                self._send(200, {"results": []})
+                return
+
+            res = requests.get(
+                GEOCODE_URL,
+                params={"name": q, "count": 5, "language": "en", "format": "json"},
+                timeout=6,
+            )
+            data = res.json()
+            results = data.get("results") or []
+
+            out = [
+                {
+                    "name": r.get("name"),
+                    "admin1": r.get("admin1", ""),
+                    "country": r.get("country", ""),
+                    "lat": r["latitude"],
+                    "lon": r["longitude"],
+                }
+                for r in results
+            ]
+            self._send(200, {"results": out})
+
+        except requests.exceptions.Timeout:
+            self._send(504, {"error": "Search timed out"})
+        except requests.exceptions.RequestException:
+            self._send(502, {"error": "Could not reach the search service"})
+        except Exception:
+            self._send(500, {"error": "Something went wrong"})
+
     def do_POST(self):
         try:
             length = int(self.headers.get("Content-Length", 0))
