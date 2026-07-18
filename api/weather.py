@@ -1,5 +1,6 @@
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
+from datetime import datetime
 import json
 import requests
 import concurrent.futures
@@ -179,10 +180,16 @@ class handler(BaseHTTPRequestHandler):
 
             times = hourly.get("time", [])
             now_iso = current.get("time")
-            try:
-                start = times.index(now_iso)
-            except ValueError:
-                start = 0
+            start = 0
+            if now_iso:
+                try:
+                    now_dt = datetime.fromisoformat(now_iso)
+                    for i, t in enumerate(times):
+                        if datetime.fromisoformat(t) >= now_dt:
+                            start = i
+                            break
+                except ValueError:
+                    start = 0
 
             hourly_out = []
             for i in range(start, min(start + 12, len(times))):
