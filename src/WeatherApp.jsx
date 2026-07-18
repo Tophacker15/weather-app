@@ -95,7 +95,7 @@ function formatClock(iso) {
   return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
-export default function App() {
+export default function WeatherApp() {
   const [data, setData] = useState(null);
   const [status, setStatus] = useState("locating");
   const [error, setError] = useState("");
@@ -211,7 +211,7 @@ export default function App() {
     }
   }
 
-  function useCurrentLocation() {
+  function useCurrentLocation(isRetry) {
     if (!navigator.geolocation) {
       setStatus("error");
       setError("Your browser doesn't support location access — search for a city instead.");
@@ -221,6 +221,13 @@ export default function App() {
     navigator.geolocation.getCurrentPosition(
       (pos) => loadWeather({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
       (err) => {
+        // Permission denials won't fix themselves on retry — fail immediately.
+        // Timeouts/unavailable can be transient (GPS still acquiring signal),
+        // so give it one automatic second try before bothering the user.
+        if (!isRetry && err.code !== err.PERMISSION_DENIED) {
+          setTimeout(() => useCurrentLocation(true), 400);
+          return;
+        }
         setStatus("denied");
         if (err.code === err.PERMISSION_DENIED) {
           setError("Location access was denied — search for a city instead.");
@@ -232,7 +239,7 @@ export default function App() {
           setError("Could not get your location — search for a city instead.");
         }
       },
-      { timeout: 15000, maximumAge: 60000 }
+      { timeout: 20000, maximumAge: 300000 }
     );
   }
 
@@ -305,7 +312,7 @@ export default function App() {
                   </div>
                 ) : (
                   <>
-                    <div className="dropdown-item" onClick={useCurrentLocation}>
+                    <div className="dropdown-item" onClick={() => useCurrentLocation()}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><circle cx="12" cy="12" r="8" /><line x1="12" y1="2" x2="12" y2="4" /><line x1="12" y1="20" x2="12" y2="22" /><line x1="2" y1="12" x2="4" y2="12" /><line x1="20" y1="12" x2="22" y2="12" /></svg>
                       Use current location
                     </div>
@@ -332,7 +339,7 @@ export default function App() {
           <div className="state-msg">
             {error}
             <div>
-              <button onClick={useCurrentLocation}>Try location again</button>
+              <button onClick={() => useCurrentLocation()}>Try location again</button>
             </div>
           </div>
         )}
