@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 
 const STYLES = `
 :root {
-  --accent:   #FB923C;
-  --accent-b: #FDBA74;
+  --accent:   #3B82F6;
+  --accent-b: #60A5FA;
+  --amber:    #F59E0B;
   --rose:     #F43F5E;
-  --sky:      #3B82F6;
   --green:    #22C55E;
   --font-h:   'Plus Jakarta Sans',sans-serif;
   --font-b:   'Inter',sans-serif;
@@ -15,26 +15,26 @@ const STYLES = `
   --trans:.22s ease;
 }
 [data-theme="dark"] {
-  --bg:      #0B0709;
-  --surf:    #14100F;
-  --surf2:   #1C1513;
+  --bg:      #0B1220;
+  --surf:    #141B33;
+  --surf2:   #1C2542;
   --border:  rgba(255,255,255,0.07);
   --border2: rgba(255,255,255,0.13);
   --text:    #FFF6F0;
   --muted:   #6B7280;
   --muted2:  #9CA3AF;
-  --nav-bg:  rgba(11,7,9,0.85);
+  --nav-bg:  rgba(11,18,32,0.85);
 }
 [data-theme="light"] {
-  --bg:      #FFFBF8;
+  --bg:      #F7FAFF;
   --surf:    #FFFFFF;
-  --surf2:   #FFF1E8;
+  --surf2:   #EAF1FF;
   --border:  rgba(0,0,0,0.08);
   --border2: rgba(0,0,0,0.14);
   --text:    #180F0B;
   --muted:   #9CA3AF;
   --muted2:  #6B7280;
-  --nav-bg:  rgba(255,251,248,0.88);
+  --nav-bg:  rgba(247,250,255,0.88);
 }
 
 .landing{font-family:var(--font-b);background:var(--bg);color:var(--text);line-height:1.65;-webkit-font-smoothing:antialiased}
@@ -73,7 +73,7 @@ const STYLES = `
 .l-hero{padding:96px 5% 64px;text-align:center;position:relative;overflow:hidden}
 .l-hero-glow{position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:900px;height:600px;background:radial-gradient(ellipse at center,rgba(251,146,60,.12) 0%,transparent 65%);pointer-events:none}
 .l-hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(251,146,60,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(251,146,60,.035) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(ellipse 80% 55% at 50% 0%,black,transparent);pointer-events:none}
-.l-hero>*{position:relative;z-index:1}
+.l-hero>*:not(.l-hero-glow):not(.l-hero-grid){position:relative;z-index:1}
 .l-hero-badges{display:inline-flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:28px}
 .l-badge{display:inline-flex;align-items:center;gap:7px;padding:5px 14px;border-radius:100px;font-size:.77rem;font-weight:500;border:1px solid var(--border2);background:var(--surf)}
 .l-badge svg{width:14px;height:14px}
@@ -145,7 +145,7 @@ const STYLES = `
 
 .l-cta-wrap{padding:0 5% 88px}
 .l-cta-inner{max-width:720px;margin:0 auto}
-.l-cta-banner{background:linear-gradient(135deg,var(--accent) 0%,#DB2777 55%,var(--sky) 100%);border-radius:26px;padding:54px 44px;text-align:center;position:relative;overflow:hidden}
+.l-cta-banner{background:linear-gradient(135deg,var(--accent) 0%,#DB2777 55%,var(--amber) 100%);border-radius:26px;padding:54px 44px;text-align:center;position:relative;overflow:hidden}
 .l-cta-banner h2{font-family:var(--font-h);font-size:clamp(1.6rem,4vw,2.2rem);font-weight:800;letter-spacing:-1px;margin-bottom:12px;color:#fff}
 .l-cta-banner p{font-size:.95rem;opacity:.85;max-width:440px;margin:0 auto 26px;color:#fff}
 .l-btn-cta{display:inline-block;background:#fff;color:var(--accent);font-weight:700;font-size:1rem;padding:13px 36px;border-radius:11px;transition:all var(--trans)}
@@ -183,24 +183,24 @@ const STYLES = `
 `;
 
 const FEATURES = [
-  { name: "Instant on Load", desc: "Location detection and forecast fetching run in parallel behind a short intro animation — data's ready by the time you can interact.", color: "#FB923C", icon: <><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></> },
+  { name: "Instant on Load", desc: "Location detection and forecast fetching run in parallel behind a short intro animation — data's ready by the time you can interact.", color: "#3B82F6", icon: <><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></> },
   { name: "No Account, No Tracking", desc: "No sign-up, no email, no ads. Your location is used to fetch a forecast and nothing else.", color: "#F43F5E", icon: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></> },
-  { name: "Search Any City, Fast", desc: "Live suggestions as you type — disambiguates cities that share a name so you always get the right one.", color: "#3B82F6", icon: <><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></> },
+  { name: "Search Any City, Fast", desc: "Live suggestions as you type — disambiguates cities that share a name so you always get the right one.", color: "#F59E0B", icon: <><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></> },
   { name: "Retries Automatically", desc: "If location access is briefly slow or fails, we retry once automatically before ever bothering you with an error.", color: "#22C55E", icon: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" /> },
   { name: "Open Weather Data", desc: "Powered by Open-Meteo — accurate, global coverage, no API key required to use the app.", color: "#FDBA74", icon: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></> },
   { name: "Free, Always", desc: "No premium tier, no paywall on the 7-day forecast. It's free because it should be.", color: "#DB2777", icon: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></> },
 ];
 
 const STEPS = [
-  { n: "01", title: "Open the App", desc: "Your browser asks for location access once. Allow it, and we know exactly where you are — no typing required.", color: "#FB923C", icon: <><path d="M12 22s8-7.5 8-13a8 8 0 1 0-16 0c0 5.5 8 13 8 13z" /><circle cx="12" cy="9" r="3" /></> },
+  { n: "01", title: "Open the App", desc: "Your browser asks for location access once. Allow it, and we know exactly where you are — no typing required.", color: "#3B82F6", icon: <><path d="M12 22s8-7.5 8-13a8 8 0 1 0-16 0c0 5.5 8 13 8 13z" /><circle cx="12" cy="9" r="3" /></> },
   { n: "02", title: "Or Search Any City", desc: "Prefer to check somewhere else? Type a city name and pick from live suggestions as you type.", color: "#F43F5E", icon: <><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></> },
-  { n: "03", title: "See Your Forecast", desc: "Current temperature, condition, humidity, wind, UV index, a 12-hour scroll strip, and a 7-day outlook.", color: "#3B82F6", icon: <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" /> },
+  { n: "03", title: "See Your Forecast", desc: "Current temperature, condition, humidity, wind, UV index, a 12-hour scroll strip, and a 7-day outlook.", color: "#F59E0B", icon: <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" /> },
 ];
 
 const INCLUDED = [
-  { name: "Current Conditions", desc: "Temperature, condition, feels-like, and daily high/low", icon: "🌡️", color: "#FB923C" },
+  { name: "Current Conditions", desc: "Temperature, condition, feels-like, and daily high/low", icon: "🌡️", color: "#3B82F6" },
   { name: "12-Hour Forecast", desc: "Scrollable hourly strip with temp and rain chance", icon: "🕐", color: "#F43F5E" },
-  { name: "7-Day Outlook", desc: "Full week ahead with daily highs, lows, and conditions", icon: "📅", color: "#3B82F6" },
+  { name: "7-Day Outlook", desc: "Full week ahead with daily highs, lows, and conditions", icon: "📅", color: "#F59E0B" },
   { name: "Humidity & Wind", desc: "Wind speed, direction, and humidity at a glance", icon: "💨", color: "#22C55E" },
   { name: "UV Index & Pressure", desc: "Know when to grab sunscreen or expect a shift in weather", icon: "☀️", color: "#FDBA74" },
   { name: "Sunrise & Sunset", desc: "Exact times for wherever you are", icon: "🌅", color: "#DB2777" },
