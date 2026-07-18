@@ -1,9 +1,18 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 
 const STYLES = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{background:#252F5C;font-family:'Kanit',sans-serif;color:#fff;min-height:100vh}
-.app{min-height:100vh;background:linear-gradient(160deg,#2C3A6B 0%,#3A4A85 45%,#2A3563 100%);padding-bottom:2.5rem}
+.app{min-height:100vh;background:linear-gradient(160deg,#2C3A6B 0%,#3A4A85 45%,#2A3563 100%);padding-bottom:2.5rem;padding-top:66px}
+
+.site-nav{position:fixed;top:0;left:0;right:0;z-index:250;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);background:rgba(11,18,32,.85);border-bottom:1px solid rgba(255,255,255,.07);height:66px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;font-family:'Plus Jakarta Sans',sans-serif}
+.site-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.2rem;letter-spacing:-.3px;color:#fff}
+.site-logo-icon{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#3B82F6,#F59E0B);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.site-logo-icon svg{width:18px;height:18px;color:#fff}
+.site-logo-accent{color:#60A5FA}
+.site-nav-home{color:rgba(255,255,255,.7);font-size:.875rem;font-weight:500;padding:7px 14px;border-radius:9px;transition:color .2s,background .2s}
+.site-nav-home:hover{color:#fff;background:rgba(255,255,255,.08)}
 
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 1.2rem .6rem;position:relative}
 .loc{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:1.3rem}
@@ -280,6 +289,14 @@ export default function WeatherApp() {
           <div className="splash-sub">Innovation</div>
         </div>
       )}
+      <nav className="site-nav">
+        <Link className="site-logo" to="/">
+          <div className="site-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" /></svg></div>
+          Topboy&nbsp;<span className="site-logo-accent">Weather</span>
+        </Link>
+        <Link className="site-nav-home" to="/">Home</Link>
+      </nav>
+
       <div className="app">
         <div className="topbar">
           <div className="loc">
