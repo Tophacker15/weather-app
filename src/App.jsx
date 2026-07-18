@@ -91,12 +91,25 @@ export default function App() {
     setStatus("loading");
     setError("");
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
       const res = await fetch("/api/weather", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        signal: controller.signal,
       });
-      const json = await res.json();
+      clearTimeout(timeoutId);
+
+      let json;
+      try {
+        json = await res.json();
+      } catch {
+        setError("The weather service returned an unexpected response — try again.");
+        setStatus("error");
+        return;
+      }
+
       if (!res.ok) {
         setError(json.error || "Could not fetch weather");
         setStatus("error");
@@ -109,8 +122,12 @@ export default function App() {
         const filtered = r.filter((x) => x.name !== entry.name);
         return [entry, ...filtered].slice(0, 5);
       });
-    } catch {
-      setError("Could not reach the server");
+    } catch (err) {
+      if (err.name === "AbortError") {
+        setError("Request took too long — try again.");
+      } else {
+        setError("Could not reach the server — check your connection and try again.");
+      }
       setStatus("error");
     }
   }
@@ -124,11 +141,19 @@ export default function App() {
     setStatus("locating");
     navigator.geolocation.getCurrentPosition(
       (pos) => loadWeather({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-      () => {
+      (err) => {
         setStatus("denied");
-        setError("Location access was denied — search for a city instead.");
+        if (err.code === err.PERMISSION_DENIED) {
+          setError("Location access was denied — search for a city instead.");
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          setError("Could not determine your location — search for a city instead.");
+        } else if (err.code === err.TIMEOUT) {
+          setError("Location request timed out — try again or search for a city.");
+        } else {
+          setError("Could not get your location — search for a city instead.");
+        }
       },
-      { timeout: 10000 }
+      { timeout: 15000, maximumAge: 60000 }
     );
   }
 
