@@ -96,21 +96,40 @@ function formatClock(iso) {
 }
 
 export default function App() {
-  const [splashVisible, setSplashVisible] = useState(true);
-  const [splashHiding, setSplashHiding] = useState(false);
-
-  useEffect(() => {
-    const hideTimer = setTimeout(() => setSplashHiding(true), 1300);
-    const removeTimer = setTimeout(() => setSplashVisible(false), 1800);
-    return () => {
-      clearTimeout(hideTimer);
-      clearTimeout(removeTimer);
-    };
-  }, []);
-
   const [data, setData] = useState(null);
   const [status, setStatus] = useState("locating");
   const [error, setError] = useState("");
+
+  const SPLASH_MIN_MS = 1500;
+  const SPLASH_MAX_MS = 20000;
+  const [splashVisible, setSplashVisible] = useState(true);
+  const [splashHiding, setSplashHiding] = useState(false);
+  const splashStartRef = useRef(Date.now());
+
+  function beginHideSplash() {
+    setSplashHiding(true);
+    setTimeout(() => setSplashVisible(false), 500);
+  }
+
+  // Hard ceiling — never let the splash block the app forever, even if
+  // loading hangs or fails silently.
+  useEffect(() => {
+    const maxTimer = setTimeout(beginHideSplash, SPLASH_MAX_MS);
+    return () => clearTimeout(maxTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Real trigger — hide as soon as we have data or a resolved error,
+  // but never faster than the minimum so the intro doesn't just flash.
+  useEffect(() => {
+    if (status === "loading" || status === "locating") return;
+    const elapsed = Date.now() - splashStartRef.current;
+    const remaining = Math.max(0, SPLASH_MIN_MS - elapsed);
+    const t = setTimeout(beginHideSplash, remaining);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [searching, setSearching] = useState(false);
