@@ -3,5 +3,9 @@
     "api/weather.py": {
       "maxDuration": 30
     }
-  }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/weather" },
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+  ]
 }
